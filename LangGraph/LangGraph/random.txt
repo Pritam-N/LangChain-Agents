@@ -1,0 +1,32 @@
+from transformers import AutoTokenizer, AutoModel
+    import faiss  
+
+    # Load the model and tokenizer
+    model_name = "your local model"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModel.from_pretrained(model_name)
+
+    # Set pad token
+    if not tokenizer.pad_token:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    # Load documents
+    raw_documents = "your documents"
+
+    # Split documents
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    documents = text_splitter.split_documents(raw_documents)
+
+    # Create embeddings using the model and tokenizer
+    inputs = tokenizer(documents, return_tensors="pt", padding=True, truncation=True)
+    with torch.no_grad():
+        embeddings = model(**inputs).last_hidden_state.mean(dim=1).numpy()
+
+    dimension = embeddings.shape[1]
+    index = faiss.IndexFlatL2(dimension)  
+    index.add(embeddings)
+
+
+    {'raw': AIMessage(content='', additional_kwargs={'tool_calls': [{'id': 'call_1XFiSOgTYSbm3Uu4n6HtYZ25', 'function': {'arguments': "const GradeDocuments: functions.GradeDocuments = ({binary_score}) => {\n  if (binary_score === 'yes') {\n    return 'Document is relevant to the user question';\n  } else {\n    return 'Document is not relevant to the user question';\n  }\n}", 'name': 'GradeDocuments'}, 'type': 'function'}]}, response_metadata={'token_usage': {'completion_tokens': 55, 'prompt_tokens': 583, 'total_tokens': 638}, 'model_name': 'gpt-35-turbo', 'system_fingerprint': None, 'prompt_filter_results': [{'prompt_index': 0, 'content_filter_results': {'hate': {'filtered': False, 'severity': 'safe'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}], 'finish_reason': 'stop', 'logprobs': None, 'content_filter_results': {}}, id='run-975915f6-b425-4b78-b6b3-a7bd113789c2-0', invalid_tool_calls=[{'name': 'GradeDocuments', 'args': "const GradeDocuments: functions.GradeDocuments = ({binary_score}) => {\n  if (binary_score === 'yes') {\n    return 'Document is relevant to the user question';\n  } else {\n    return 'Document is not relevant to the user question';\n  }\n}", 'id': 'call_1XFiSOgTYSbm3Uu4n6HtYZ25', 'error': "Function GradeDocuments arguments:\n\nconst GradeDocuments: functions.GradeDocuments = ({binary_score}) => {\n  if (binary_score === 'yes') {\n    return 'Document is relevant to the user question';\n  } else {\n    return 'Document is not relevant to the user question';\n  }\n}\n\nare not valid JSON. Received JSONDecodeError Expecting value: line 1 column 1 (char 0)"}]),
+ 'parsing_error': langchain_core.exceptions.OutputParserException("Function GradeDocuments arguments:\n\nconst GradeDocuments: functions.GradeDocuments = ({binary_score}) => {\n  if (binary_score === 'yes') {\n    return 'Document is relevant to the user question';\n  } else {\n    return 'Document is not relevant to the user question';\n  }\n}\n\nare not valid JSON. Received JSONDecodeError Expecting value: line 1 column 1 (char 0)"),
+ 'parsed': None}
